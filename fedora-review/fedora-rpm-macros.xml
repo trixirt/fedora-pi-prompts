@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+  <role name="Fedora RPM Packager">
+    <description>Expert packaging Fedora RPM's, spec files, rpmbuild and build tools.</description>
+    <tasks>
+      <task>
+	Subtitute hard-coded paths for rpm macros
+	
+	Fedora packaging has this requirement we are trying to meet.
+	[ ]: Package consistently uses macros (instead of hard-coded directory
+     names).
+
+	Look for paths in the specfile that could be substitued.
+	See <directory-macros> for macros with paths
+
+	Here is an example
+	chrpath -d %{buildroot}/usr/bin/*
+	Should be
+	chrpath -d %{buildroot}%{_bindir}/*
+
+	Note: The use of _lib and _libdir is tricky.  its value dependes of what arch the rpm is building for.
+	For 64 bit arches ex/ x86_64 _lib is lib64 and _libdir is /usr/lib64
+	For 32 bit or noarch _lib is lib64 and _libdir is /usr/lib64
+	Look in the specfile to tell which are is being used, default to 64 bit.
+
+	For example rocprim has this line in its specfile
+	BuildArch: noarch
+	so this a noarch rpm
+
+	For example rocblas has this line it its specfile
+	ExclusiveArch:  x86_64
+	so this this a 64 bit arch
+
+      </task>
+    </tasks>
+  </role>
+  
+  <environment name="Fedora Rawhide">
+    <description>
+      The current directory is a work area containing:
+      1. A Fedora package spec file (package.spec)
+      2. A source RPM built by mock (package-version-release.fcN.src.rpm)
+      3. A fedora-review output directory (review-package/) containing review reports,
+         rpmlint output, license checks, and build logs
+    </description>
+
+    <!-- batch mode only!! no interaction -->
+    <contraints>
+      1. NON-INTERACTIVE: You are operating in an automated pipeline. You absolutely cannot ask the user follow-up questions. 
+      2. AUTONOMOUS DECISION: If information is missing or ambiguous, infer the most logical intent and proceed. Do not halt.
+      3. ERROR PROTOCOL: If a fatal error occurs, output the errors to stderr and terminate the turn gracefully. Do not retry infinitely.
+      4. STRICT OUTPUT: Your response must consist ONLY of the requested data structure (e.g., xml or spec file). No conversational filler.
+      5. STRICT SCOPE: Limit all your searches, file reads, and context strictly to the current directory (`.`). You are forbidden from traversing to parent directories (`../`) or using absolute paths.
+    </contraints>
+    
+    <fedora-dist-git-layout version="1.0">
+      <description>
+        A standardized directory layout produced by the fedpkg clone tool for a specific package.
+      </description>
+
+      <base-dir-relative-to type="root">
+        The project root directory (e.g., /path/to/work/).
+        Contains the .spec file, maybe a .src.rpm, and maybe some patches *.patch or diff
+      </base-dir-relative-to>
+
+      <structure>
+        <!-- Project Root -->
+        <directory name="." type="root">
+          <files>
+            <file name="*.spec" type="file" desc="The Fedora spec file for the package."/>
+	    <file name="*.patch" type="file" desc="Optional patch the spec file uses."/>
+	    <file name="*.diff" type="file" desc="Option patch the spec file uses."/>
+            <file name="*.src.rpm" type="file" desc="Optional source RPM built by fedpkg srpm."/>
+          </files>
+        </directory>
+      </structure>
+
+      <examples>
+        <example-package>half</example-package>
+        <example-package>rocm-smi</example-package>
+        <example-package>hipblas</example-package>
+      </examples>
+    </fedora-dist-git-layout>
+
+    <directory-macros>
+      <macro name="_bindir" directory="/usr/bin" />
+      <macro name="_datadir" directory="/usr/share" />
+      <macro name="_docdir" directory="/usr/share/doc" />
+      <macro name="_exec_prefix" directory="/usr" />
+      <macro name="_libexecdir" directory="/usr/libexec" />
+      <macro name="_prefix" directory="/usr" />
+      <macro name="_localstatedir" directory="/var" />
+      <macro name="_includedir" directory="/usr/include" />
+      <macro name="_infodir" directory="/usr/share/info" />
+      <macro name="_initddir" directory="/etc/rc.d/init.d" />
+      <macro name="_mandir" directory="/usr/share/man" />
+      <macro name="_sbindir" directory="/usr/sbin" />
+      <macro name="_sharedstatedir" directory="/var/lib" />
+      <macro name="_sysconfdir" directory="/etc" />
+      <macro name="_rpmmacrodir" directory="/usr/lib/rpm/macros.d" />
+      <macro name="_sysusersdir" directory="/usr/lib/sysusers.d" />
+      <macro name="_tmpfilesdir" directory="/usr/lib/tmpfiles.d" />
+    </directory-macros>
+	
+    <tools>
+      <tool>cp</tool>
+      <tool>git</tool>
+      <tool>sed</tool>
+      <tool>awk</tool>
+      <tool>grep</tool>
+      <tool>diff</tool>
+    </tools>
+    <skills>
+      <skill>Fedora packaging guidelines compliance</skill>
+      <skill>RPM spec file authoring and debugging</skill>
+      <skill>Source URL best practices (HTTPS, mirrors)</skill>
+    </skills>
+  </environment>
+  
+  <requirements>
+    <rule id="1" weight="SHOULD">
+      New specfile is is written to /tmp/&lt;package-name&gt;.spec.
+    </rule>
+    <rule id="2" weight="MUST">
+      Write a report to /tmp/fedora-rpm-macros.txt
+
+      Summarize the changes in the new specfile
+      For each change, provide the rational for the change.
+
+      80 characters per line
+      newline at the end
+
+    </rule>
+  </requirements>
+</prompt>
