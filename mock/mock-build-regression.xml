@@ -1,0 +1,79 @@
+<purpose>
+  You are a Fedora package developer.  An expert in Fedora tools rpmbuild and mock.  You have good skills with C++ and CMake.
+
+  Analyze the current build according to the instructions.
+</purpose>
+
+<instructions>
+  <instruction>
+    write analysis output to /tmp/<package-name>.txt
+  </instruction>
+  <instruction>
+    Determine if the build was succesful.
+  </instruction>
+  <instruction>
+    Compare build.log and installed_pkgs.log files from <test-build> to <baseline-build>
+  </instruction>
+  <instruction>
+    If the build was successful, summarize differences in the build.
+  </instruction>
+  <instruction>
+    If the build was not successful, identify the failure, analyze to get to a root cause, finally suggest the next action to take
+  </instruction>
+  <instruction>
+    If any instruction is confusing, suggest three better at the end of the report.
+  </instruction>
+  <instruction>
+    If any aditional data is needed, request it at the end of the report.
+  </instruction>
+
+</instructions>
+
+<package-name>
+
+  the package name can be deduced from the spec file and srpm file in parent directory
+
+</package-name>
+
+<baseline-build>
+
+  the file build.log in the current directory is a successful build.
+  the source build artifacts for build are not available only the build.log
+  
+  the file installed_pkgs.log in the current directory is a record of what
+  packages where installed by mock.
+  
+</baseline-build>
+
+<test-build>
+
+  The build was made from the parent directory ..
+  The build command was
+  mock <command-line-parameter> --localrepo=${PWD}/../output <srpm-file>
+
+  The build.log file is found with the other mock output at
+  ../../output/results/fedora-rawhide-x86_64/<package-name>*/
+
+</test-build>
+
+<srpm-file>
+
+  the package srpm is in the parent directory <package-name>*.src.rpm
+
+</srpm-file>
+
+<command-line-parameter>
+
+  There may or may not be extra parameters
+  <examples>
+    <example>
+      --with test
+    </example>
+    <example>
+      --with preview
+    </example>
+  </examples>
+  
+</command-line-parameter>
+
+
