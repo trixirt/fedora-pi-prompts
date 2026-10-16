@@ -1,0 +1,1 @@
+Analyze the current directory and give me an overview, focus of test results in output/
