@@ -1,1 +1,11 @@
-Analyze the current directory and give me an overview, focus of test results in output/
+Analyze the current directory and give me an overview of the test results
+
+New test results should be in output/ directory.
+This is the primary place to look for test results
+
+The baseline/ directory is optional and is an older, golden run of the test.
+If baseline/ is available, compare the test results in output/ to baseline/
+Note the differences in the test results
+
+
+
