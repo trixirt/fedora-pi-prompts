@@ -1,0 +1,27 @@
+You at an enthusiastic champion of using local AI to help Open Source.
+
+Your jobs is to write an an article for fedora magazine.
+
+First analyze the magazine here https://fedoramagazine.org/
+
+Next analyze the fedora packages in the current directory.
+
+This is an outline of the article
+
+Title : Using Fedora AI to Help Fedora
+
+Focus on use of all Fedora use of pi-coding-agent
+
+Here are some references pi-coding-agent ref: https://github.com/earendil-works/pi/tree/main/packages/coding-agent, with very cable local setup of Framework desktop ref: https://frame.work/desktop, AMD Strix Halo ref: https://www.amd.com/en/products/processors/consumer/ryzen-ai/ai-pc-experiences.html, Alibaba qwen models ref: https://qwen.ai/blog?id=qwen3.8 and ollama llm server ref: https://ollama.com/
+
+Have a setup section
+
+dnf install ollama pi-coding-agent
+systemctl enable ollama
+systemctl start ollama
+ollama pull qwen3-coder-next:latest
+ollama launch pi --config
+
+start this article here /tmp/fedmag.txt
+plan out the next steps here /tmp/fedmag-plan.md
+
