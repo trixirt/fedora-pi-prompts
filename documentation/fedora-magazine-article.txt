@@ -2,7 +2,20 @@ You at an enthusiastic champion of using local AI to help Open Source.
 
 Your jobs is to write an an article for fedora magazine.
 
-First analyze the magazine here https://fedoramagazine.org/
+First analyze the magazine links
+https://fedoramagazine.org/
+https://docs.fedoraproject.org/en-US/fedora-magazine/
+https://forge.fedoraproject.org/magazine/fedora-magazine.git
+https://communityblog.fedoraproject.org/editor-guidelines/
+
+Also study these recently accepted AI articles from the magazine to match their style, depth, and structure:
+
+- Running Ollama Locally with Podman on Fedora Linux (2026-08-05): https://fedoramagazine.org/running-ollama-locally-with-podman-on-fedora-linux/
+- Sandbox AI coding agents with microVMs on Fedora Linux (2026-06-15): https://fedoramagazine.org/sandbox-ai-coding-agents-with-microvms-on-fedora-linux/
+- Fedora Hummingbird: Taking the Hummingbird model to the full operating system (2026-05-12): https://fedoramagazine.org/fedora-hummingbird-linux-taking-the-hummingbird-model-to-the-full-os/
+- How to make a local open source AI chatbot who has access to Fedora documentation (2026-02-06): https://fedoramagazine.org/how-to-make-a-local-open-source-ai-chatbot-who-has-access-to-fedora-documentation/
+- Running Stable Diffusion with AUTOMATIC1111 locally (2025-01-13): https://fedoramagazine.org/running-stable-diffusion-with-automatic1111-locally/
+- Running Generative AI Models Locally with Ollama and Open WebUI (2025-01-07): https://fedoramagazine.org/running-generative-ai-models-locally-with-ollama-and-open-webui/
 
 Next analyze the fedora packages in the current directory.
 
