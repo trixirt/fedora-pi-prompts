@@ -38,3 +38,7 @@ ollama launch pi --config
 start this article here /tmp/fedmag.txt
 plan out the next steps here /tmp/fedmag-plan.md
 
+The fedora magazine requires a pitch summary.
+write this pitch here /tmp/fedmag-pitch.txt
+Summarize the /fedmag.txt
+Pitch this the start of a series of man-in-the-street articles about people using fedora ai in their daily lives to get real work done.
