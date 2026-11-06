@@ -1,26 +1,23 @@
-# Using Fedora AI to Help Fedora
+# Using Fedora AI to Help Open Source
 
-*How a Fedora package maintainer uses pi-coding-agent and fully local AI for real packaging work*
+*How Fedora users leverage pi-coding-agent and local AI to contribute to open source projects*
 
 ## Introduction
 
-Last release cycle I was maintaining the ROCm stack for Fedora with 40+ packages, each generating pages of review and test output. Reading through another 800-line test log felt like the fastest path to done, and I was wrong every time. Local AI changed that: [pi-coding-agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent), running against Qwen models that never leave my machine, now parses test logs, flags spec file problems, and compares failing builds against known-good baselines in seconds. This article shows how to set it up on Fedora and what I actually use it for when I work on Fedora packages.
-
-Pi-coding-agent has become indispensable for Fedora package maintenance. It doesn't replace human expertise but augments it — taking the drudgery out of the work so you can focus on the parts that require human judgment and creativity.
-
-The fedora-pi-prompts repository provides pre-built prompts for Fedora-specific tasks, so you don't need to start from scratch. It includes prompts for build regression, package review compliance, and test failure analysis — all tailored to Fedora packaging workflows.
+The pi-coding-agent is now part of Fedora 45. This article introduces the tool for an end-to-end open source agentic AI stack. Over the course of the Fedora 45 development period I have been using pi to do real day to day work for Fedora and want to share this tool with the rest of the community.
 
 ## What is pi-coding-agent?
 
-pi-coding-agent (or just "pi") is an open source coding agent that lives in your terminal. It reads files, runs commands, and explains failures — but you control what it touches, and every step is visible.
+[pi-coding-agent](https://pi.dev/) (or just "pi") is an open source coding agent. It runs on your machine, reads files, runs commands, and explains failures — but you control what it touches, and every step is visible.
 
-What makes it interesting for Fedora is that it can be pointed at a local LLM server such as [Ollama](https://ollama.com/). Your code, specs, and build logs never leave your hardware, and it works fine on a laptop without a datacenter GPU. Both pi and Ollama are Fedora packages, so the entire stack installs with dnf — no COPR, no manual downloads. This makes it easy to get started with local AI on Fedora.
+What makes it perfect for Fedora is that it can be pointed at local LLM servers already in Fedora, such as [Ollama](https://ollama.com/) and [llama.cpp](https://llama-cpp.com/), with [gufo](https://github.com/gufo-org/gufo) and [colibri](https://github.com/JustVugg/colibri) coming in Fedora 46.
 
-Pi is built around a few principles that matter for packaging work. It is privacy-first by design: inference happens on your machine, and nothing is sent to a cloud API unless you explicitly configure it to. It is extensible — behavior can be shaped with extensions, skills, and prompt templates, making it adaptable to different workflows — and it is backend-agnostic, talking to Ollama, llama.cpp, vLLM, or other local LLM servers. For this article, Ollama plus Qwen is all you need.
+Pick the Fedora LLM server you want.
+
+We are using Ollama in this article because it is the easiest to integrate with pi.
+
 
 ## Getting started
-
-Everything below works on Fedora Workstation and Server. I even used this setup on Atomic edition, which works just as well as the full desktop variant. Budget about 8GB of RAM for small models, 16GB+ for comfortable use, and any recent AMD or Intel CPU. A GPU helps a lot. On AMD systems, ROCm is what makes the big models practical and fast enough for interactive use.
 
 ### Install
 
@@ -29,124 +26,111 @@ sudo dnf install ollama pi-coding-agent
 sudo systemctl enable --now ollama
 ```
 
-pi wires itself to Ollama through the launch integration:
+### Pick a model that fits your GPU's VRAM
+
+| VRAM | Recommended Model | Notes |
+|-----|-------------------|-------|
+| **64GB** | [`qwen3-coder-next:latest`](https://ollama.com/library/qwen3-coder-next) | 80B MoE (3B active per token, ~52GB download), excellent quality |
+| **32GB** | [`qwen3.8:27b`](https://ollama.com/library/qwen3.8) | 27B (~18GB download), very good quality |
+| **16GB** | [`qwen3:8b`](https://ollama.com/library/qwen3) | 8B (~5.2GB download), good coding, leaves room for other work |
+| **8GB** | [`qwen3:1.7b`](https://ollama.com/library/qwen3) or [`qwen3:4b`](https://ollama.com/library/qwen3) | 1.7B (~1.4GB) or 4B (~2.5GB) download, quick, responsive, adequate for simple tasks |
+
+Note: Use the biggest model your hardware can handle and experiment from there — the quality difference is worth it. The model used in the use cases is qwen3.8:27b.
+
+For more information on Qwen models, see the [Qwen3 documentation](https://www.alibabacloud.com/help/en/model-studio/qwen3-8-27b).
+
+Install a model:
 
 ```bash
-ollama launch pi
+ollama pull qwen3.8:27b
 ```
 
-That configures Ollama as pi's model provider and drops you into an interactive session. Use `ollama launch pi --config` to configure without starting a session. The launch integration simplifies setup so you can get to work rather than configuration.
-
-Verify the pieces are talking to each other:
+pi wires itself to ollama through the launch integration:
 
 ```bash
-ollama --version
-pi --version
+ollama launch pi --config
 ```
 
-Once everything verifies, start pi in any directory and ask it something harmless, like summarizing the spec file sitting in front of you. If it reads the file and answers, your local stack is working end to end
+That configures ollama as pi's model provider and drops you into an interactive session. ollama will take you some choices, mostly to pick the model you just downloaded. After this one config set, you can use pi directly.
 
-### Pick a model that fits your RAM
+```bash
+pi
+```
 
-My daily driver is a [Framework Desktop](https://frame.work/desktop) with an AMD [Strix Halo](https://www.amd.com/en/products/processors/consumer/ryzen-ai/ai-pc-experiences.html) processor (Radeon 8050S, gfx1151). With ROCm installed, larger models run several times faster. For packaging work, I rely on this acceleration for model loading and prompt processing. On CPU-only systems, smaller models will still work but may take longer to respond. If you're running out of RAM, Ollama's `OLLAMA_KV_CACHE_TYPE=i8` setting can help reduce memory usage.
+Once this is working, try pi on any open source project you're working on. Start pi in any directory and ask it to analyze the project and provide a summary. Then use pi's help to explore whatever interests you — whether it's understanding the codebase, suggesting improvements, or debugging issues. This is your local AI assistant, ready to help you learn and work with any codebase.
 
-## Real-World Use Cases for Fedora Users
+## Real-World Use Cases from a Fedora Packager
+
+In the Fedora project, I am a packager, responsible for maintaining AI packages and the ROCm stack. Here are some real world uses of using the same AI that I am maintaining to help with my day to day work. The prompts come from a personal project [fedora-pi-prompts](https://github.com/trixirt/fedora-pi-prompts)
 
 ### 1. Diagnosing Build Failures with mock-build-regression
 
-**Problem:** When a package build fails during mass rebuilds with hundreds of packages, tracking down the root cause can take hours of manual log analysis. Each failure produces verbose output that needs careful interpretation to determine if it's a real issue or a transient build problem. The sheer volume of logs makes it difficult to see patterns across failures.
+**Problem:** When a package build fails during mass rebuilds with hundreds of packages, tracking down the root cause can take hours. The sheer volume of logs makes it difficult to see patterns across failures.
 
 **Example workflow:**
 
 ```bash
-# Copy the build log from a failed mock build
-cp /var/lib/mock/fedora-rawhide-rawhide/result/failed-package.log .
-
-# Run the regression analysis prompt
-pi < ~/ai/fedora-pi-prompts/mock/mock-build-regression.xml
+cd <package>
+# Update the package and do a build
+mock <package>.srpm
+# Waiting for mock to finish
+# Some failure happens during build
+cp <path-to-successful>/results/build.log .
+pi < ~/fedora-pi-prompts/mock/mock-build-regression.xml
 ```
 
 The prompt analyzes the log against known-good build patterns I've tracked over previous releases. It identifies:
-- Whether the failure is a new issue or a known transient problem
-- Which dependencies might be affected
-- What changes in the package or its dependencies could be causing the failure
+- Finds the problem area in the build
+- Does an initial triage of the problem
+- Proposes a fix
 
-**How AI helps:** Instead of spending hours parsing through hundreds of lines of build output, I get a concise summary that highlights the likely causes. This lets me focus on fixing real issues rather than diagnosing known problems. The AI remembers the baseline of previous successful builds and flags deviations.
+**How open source AI helps:** Instead of spending hours parsing through build output, I get a concise summary that highlights the likely causes.
 
-### 2. Automated Package Review with fedora-review Prompts
+### 2. Automated Package Improvement with fedora-review Prompts
 
-**Problem:** Each Fedora package must pass the `fedora-review` tool, which generates pages of output covering dozens of packaging requirements. Manually reviewing each item against the Fedora Packaging Guidelines takes time and is error-prone, especially when you have 40+ packages to review.
+**Problem:** Fedora packages need to stay compliant with the Packaging Guidelines as they evolve. Refreshing existing packages to match updated guidelines can be tedious, especially when maintaining dozens of packages. Manually reviewing each package for compliance takes time and is error-prone.
 
 **Example workflow:**
 
 ```bash
-# For each package in the stack
-for pkg in /sfs/rocm/*/; do
-  cd "$pkg"
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-english.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-patch.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-fonts.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-globals.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-macros.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-extra-bins.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-preserve-time.xml
-  pi < ~/ai/fedora-pi-prompts/fedora-review/fedora-rpm-changelog.xml
+for pkg in ~/<path-to-packages>/*/; do
+  cd "$pkg" || continue
+  pi < ~/fedora-pi-prompts/fedora-review/fedora-rpm-english.xml
 done
 ```
 
-The benefit: Instead of manually reading through pages of review output for each package, you get concise summaries addressing each Fedora requirement. For the major ROCm 8.x update (F45), batch runs like this cut the review analysis from days to hours across 40+ packages — I could focus on the actual fixes while pi worked through the logs.
-
-**How AI helps:** The batch processing runs all 8 prompts for all 40+ packages in a single command. Instead of manually reviewing each package against each of the 8 requirements, I get concise summaries highlighting only the items that need action. This reduces review time from days to hours, and I can continue working on other packages while the AI analyzes each one.
+**How open source AI helps:** Instead of manually reviewing each package for compliance, you get automatic suggestions for improvement.
 
 ### 3. Analyzing Test Failures with Test Prompts
 
-**Problem:** ROCm includes dozens of packages that each run hundreds or thousands of tests. When tests fail, the output spans hundreds of lines, and determining whether a failure is a real bug, a test environment issue, or a known flake requires careful analysis across many test logs.
+**Problem:** Fedora ROCm packages have test subpackages that each run hundreds or thousands of tests. When tests fail, the output spans hundreds of lines, and determining whether a failure is a real bug, a test environment issue, or a known flake requires careful analysis across many test logs.
+
+**Test container:** The [rocm-distro-containers](https://github.com/trixirt/rocm-distro-containers/tree/main/fedora/rawhide/hipblas) repository contains container-based testing targeting Fedora and other Linux distributions like Ubuntu, Debian, and Arch. Each package has subdirectories with tests organized according to the [ROCm Testing](https://fedoraproject.org/wiki/SIGs/HC#Testing) table.
 
 **Example workflow:**
 
 ```bash
-# Copy test output from containerized builds
-cp /sfs/rocm-distro-containers/fedora/rawhide/hipblas/check/output/test.log .
-
-# Run analysis prompts
-pi < ~/ai/fedora-pi-prompts/test/docker-pkgdiff.xml
+cd <path-to-tests>/hipblas/copr-preview-pkgdiff
+./run.sh
 ```
 
-The prompts analyze the test output to produce:
-- Summary of pass/fail/skip counts
-- GPU architecture verification
-- Version compatibility check
-- Identification of which tests failed and whether the failures are expected
+The [run.sh](https://github.com/trixirt/rocm-distro-containers/blob/main/fedora/rawhide/hipblas/copr-preview-pkgdiff/run.sh) script builds the docker, then runs the docker collecting test output, and finally runs pi to analyze it, producing:
+- Summary of ABI changes and an evaluation of seriousness
+- Summary of package manifest changes
 
-**How AI helps:** Instead of manually reading through test logs for each package, I get structured summaries that make it easy to see at a glance which issues are real bugs versus expected behavior. For the ROCm 7.2 compatibility stack targeting F46, this reduced test analysis from hours to minutes per package — I could focus on actual fixes while the AI identified which failures needed attention.
-
-## fedora-pi-prompts: Fedora-Specific Prompts
-
-The [`fedora-pi-prompts`](https://github.com/trixirt/fedora-pi-prompts) repository contains ready-to-use prompts for Fedora workflows:
-
-- `fedora-review/` - 8 spec file compliance prompts
-- `mock/` - mock build regression analysis
-- `test/` - Docker container test analysis
-
-Each prompt is an XML file that contains system instructions, example outputs, and the content to analyze. For example, the `fedora-rpm-english.xml` prompt asks the model to fix British-to-American spelling issues in RPM spec files.
+**How open source AI helps:** Instead of manually reading through test logs for each package, I get structured summaries that make it easy to see at a glance which issues are real bugs versus expected behavior.
 
 ## Things to Watch Out For
 
-A few honest caveats: the prompts are helpers, not gatekeepers. Every spec change pi makes should pass `fedora-review` and your review before shipping. Smaller models make smaller mistakes — a 4B model will confidently "fix" the wrong file if the prompt is ambiguous, so read the diffs.
-
-## Getting involved
-
-The [Fedora AI/ML SIG](https://docs.fedoraproject.org/en-US/ai-ml/) maintains the packages this article uses, from Ollama to the ROCm stack, and its documentation is a good next stop. If pi helps you with your own Fedora work, the best contributions are using it on real packages, filing bugs at [bugs.fedoraproject.org](https://bugs.fedoraproject.org/), and adding prompts to fedora-pi-prompts for the tasks I have not covered yet.
+A few honest caveats: AI prompts are helpers, not gatekeepers. AI will confidently "fix" something that may not be broken.
 
 ## Conclusion
 
-This article was written with pi-coding-agent talking to a local Qwen model — the same setup it describes. Local AI is not about replacing maintainers; it is about doing the tedious parts of Fedora work on your own hardware, on your own terms, while keeping your data and code under your control.
-
-From building to packaging to testing, pi-coding-agent with fedora-pi-prompts handles the verbose, repetitive work that was previously a bottleneck. Now I can focus on the actual fixes while the AI analyzes logs, reviews specs, and summarizes test results. The results speak for themselves: what used to take days of manual work now takes hours what used to take hours now takes minutes
+Open source AI is not about replacing maintainers; it is a tool to help you do the tedious parts of open source work on your own hardware, on your own terms, while keeping your code and data under community control.
 
 ## AI Attribution
 
-I drafted this article with pi-coding-agent (Qwen3 via Ollama) and ran and verified every command on my own hardware. The technical content and all claims are my own.
+I drafted this article with pi.
 
 ## How This Article Was Written
 
@@ -154,27 +138,22 @@ This article follows a collaborative workflow between human and AI editors. Here
 
 1. **Initial Prompt** - "Write a Fedora Magazine article about using pi-coding-agent for local AI in Fedora"
 
-2. **Human-AI Pairing** - I worked with pi-coding-agent to:
-   - Draft the structure and outline
-   - Verify commands on Framework Desktop with AMD Strix Halo
-   - Refine Fedora-specific examples using ROCm and package maintainer workflows
+2. **Human-AI Pair Programming** - I worked with pi-coding-agent to:
+ - Draft the structure and outline
+ - Verify commands on Framework Desktop with AMD Strix Halo
+ - Refine Fedora-specific examples using ROCm and package maintainer workflows
 
 3. **Research AI Assistant** - A second AI (running pi+gufo on another Strix Halo machine) was used to:
-   - Analyze recent Fedora Magazine articles for style and structure
-   - Review `/tmp/study.txt` to extract best practices from 2025-2026 accepted articles
-   - Verify model tags and package status
-   - Identify fixes needed in the draft
+ - Analyze recent Fedora Magazine articles for style and structure
+ - Review research AI's results to extract best practices from 2025-2026 accepted articles
+ - Generated a second opinion draft
 
 4. **Merged Draft** - I incorporated the research findings:
-   - Removed COPR step (both tools in Fedora main repos)
-   - Removed ROCm install section (dnf install ollama installs ROCm)
-   - Fixed model tags to real values
-   - Restructured use cases: build, package, test
-   - Added hardware-specific performance notes
-   - Added AI attribution paragraph
+ - Many changes worked through pair programming.
 
 This workflow demonstrates how local AI tools can assist not just with code, but with the entire writing process — from research to drafting to refinement, all while keeping data local and under human control.
 
 ---
 
-*About the author: Tom Rix maintains the ROCm stack for Fedora and contributes to the Fedora AI/ML SIG.*
+*About the author: Tom Rix maintains pi, other AI packages and the ROCm stack for Fedora and contributes to both the [AI/ML SIG](https://docs.fedoraproject.org/en-US/ai-ml/) and the [Heterogeneous Computing (HC) SIG](https://fedoraproject.org/wiki/SIGs/HC).*
+

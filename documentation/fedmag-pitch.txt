@@ -1,0 +1,29 @@
+# Fedora Magazine Article Pitch
+
+## Article Title: Using Fedora AI to Help Open Source
+
+## Pitch Summary
+
+Fedora 44 shipped Ollama and llama.cpp, the first local LLM servers in Fedora. Fedora 45 builds on that foundation by shipping pi-coding-agent, the first end-to-end open source agentic AI stack to connect to those servers. The author, a Fedora maintainer for the ROCm AI/ML stack, has used pi to handle real packaging work throughout the Fedora 45 development cycle.
+
+This article shows how to get pi up and running with a single `dnf install` command, select the right model for your GPU's VRAM, and then dive into three practical workflows:
+
+- Diagnosing build failures from mock logs
+- Automated spec-file review with the fedora-pi-prompts repository
+- Analyzing thousands of ROCm test results
+
+All examples work the same way regardless of which LLM server you choose. The article is self-referential: it was written with pi-coding-agent, and documents the human + local-AI workflow behind it.
+
+## Target Readers
+- Anyone interested in local AI tools
+- Open source developers
+- Community contributors
+- Fedora package maintainers
+
+## Key Selling Points
+1. **Fedora 45 available now:** Pi, Ollama and llama.cpp are in the official repos - production-ready
+2. **Community-powered:** fedora-pi-prompts is open for contributions
+3. **Interoperability:** pi works with any local LLM server - you choose what works for you
+4. **Real-world examples:** ROCm package maintainer workflows - mass rebuilds, review, test analysis
+
+## Word Count: 287 words
